@@ -1,0 +1,469 @@
+<html>
+<head>
+    <title>Investment Portfolio Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #f5f5f5; /* Light gray background */
+            color: #333; /* Dark gray text */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            text-align: center;
+            background-color: #ffffff; /* White background */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 1000px;
+            margin-top: 20px;
+        }
+        
+        .title {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #337ab7; /* Blue title color */
+        }
+        
+        .total-value {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #666; /* Dark gray text */
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd; /* Light gray border */
+        }
+        
+        th {
+            background-color: #f0f0f0; /* Light gray background */
+        }
+        
+        td {
+            background-color: #ffffff; /* White background */
+        }
+        
+        .actions button {
+            background-color: #337ab7; /* Blue button color */
+            color: #ffffff; /* White text */
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .actions button:hover {
+            background-color: #23527c; /* Darker blue on hover */
+        }
+        
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .chart-container canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .add-investment {
+            margin-bottom: 20px;
+        }
+        
+        .add-investment input, .add-investment button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ddd; /* Light gray border */
+        }
+        
+        .add-investment input {
+            width: 200px;
+        }
+        
+        .add-investment button {
+            background-color: #337ab7; /* Blue button color */
+            color: #ffffff; /* White text */
+            cursor: pointer;
+        }
+        
+        .add-investment button:hover {
+            background-color: #23527c; /* Darker blue on hover */
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: #ffffff; /* White background */
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            width: 300px;
+            color: #333; /* Dark gray text */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s;
+        }
+        
+        .close {
+            color: #aaaaaa; /* Light gray text */
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: #333; /* Dark gray text on hover */
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content p {
+            margin: 10px 0;
+        }
+        
+        .modal-content .details {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .update-investment {
+            display: none;
+            position: fixed;
+            z-index: 2;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .update-content {
+            background-color: #ffffff; /* White background */
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            width: 300px;
+            color: #000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s;
+        }
+        .update-content input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .update-content button {
+            background-color: #0b2f9f;
+            color: #ffffff;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .update-content button:hover {
+            background-color: #161d6f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Investment Portfolio Tracker</div>
+        <div class="total-value">Total Portfolio Value: $<span id="totalValue">7000.00</span></div>
+        <div class="add-investment">
+            <input type="text" id="assetName" placeholder="Asset Name">
+            <input type="number" id="investedAmount" placeholder="Invested Amount">
+            <input type="number" id="currentValue" placeholder="Current Value">
+            <button onclick="addInvestment()">Add Investment</button>
+        </div>
+        <table id="investmentTable">
+            <thead>
+                <tr>
+                    <th>Asset Name</th>
+                    <th>Invested</th>
+                    <th>Current</th>
+                    <th>% Change</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <div class="chart-container">
+            <canvas id="investmentChart"></canvas>
+        </div>
+    </div>
+
+    <div id="investmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <p class="details" id="investmentDetails"></p>
+        </div>
+    </div>
+
+    <div id="updateModal" class="update-investment">
+        <div class="update-content">
+            <span class="close" onclick="closeUpdateModal()">&times;</span>
+            <input type="text" id="updateAssetName" placeholder="Asset Name">
+            <input type="number" id="updateInvestedAmount" placeholder="Invested Amount">
+            <input type="number" id="updateCurrentValue" placeholder="Current Value">
+            <button onclick="updateInvestment()">Update Investment</button>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('investmentChart').getContext('2d');
+        const investmentChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Investment Distribution',
+                    data: [],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Investment Distribution'
+                    }
+                }
+            },
+        });
+
+        function loadInvestments() {
+            const investments = JSON.parse(localStorage.getItem('investments')) || [];
+            investments.forEach(investment => {
+                addInvestmentToTable(investment);
+                addInvestmentToChart(investment);
+            });
+            updateTotalValue();
+        }
+
+        function saveInvestments(investments) {
+            localStorage.setItem('investments', JSON.stringify(investments));
+        }
+
+        function addInvestment() {
+            const assetName = document.getElementById('assetName').value;
+            const investedAmount = parseFloat(document.getElementById('investedAmount').value);
+            const currentValue = parseFloat(document.getElementById('currentValue').value);
+
+            if (assetName && investedAmount && currentValue) {
+                const investment = { assetName, investedAmount, currentValue };
+                const investments = JSON.parse(localStorage.getItem('investments')) || [];
+                investments.push(investment);
+                saveInvestments(investments);
+
+                addInvestmentToTable(investment);
+                addInvestmentToChart(investment);
+                updateTotalValue();
+
+                // Clear input fields
+                document.getElementById('assetName').value = '';
+                document.getElementById('investedAmount').value = '';
+                document.getElementById('currentValue').value = '';
+            }
+        }
+
+        function addInvestmentToTable(investment) {
+            const table = document.getElementById('investmentTable').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+
+            const cell1 = newRow.insertCell(0);
+            const cell2 = newRow.insertCell(1);
+            const cell3 = newRow.insertCell(2);
+            const cell4 = newRow.insertCell(3);
+            const cell5 = newRow.insertCell(4);
+            
+
+            const percentChange = ((investment.currentValue - investment.investedAmount) / investment.investedAmount * 100).toFixed(2);
+
+            cell1.innerHTML = investment.assetName;
+            cell2.innerHTML = `$${investment.investedAmount.toFixed(2)}`;
+            cell3.innerHTML = `$${investment.currentValue.toFixed(2)}`;
+            cell4.innerHTML = `${percentChange}%`;
+            cell5.innerHTML = `
+                <button onclick="viewInvestment(this)">View</button>
+                <button onclick="showUpdateModal(this)">Update</button>
+                <button onclick="deleteInvestment(this)">Delete</button>
+            `;
+        }
+
+        function addInvestmentToChart(investment) {
+            investmentChart.data.labels.push(investment.assetName);
+            investmentChart.data.datasets[0].data.push(investment.investedAmount);
+            investmentChart.update();
+        }
+
+        function updateTotalValue() {
+            const investments = JSON.parse(localStorage.getItem('investments')) || [];
+            const totalValue = investments.reduce((total, investment) => total + investment.currentValue, 0);
+            document.getElementById('totalValue').innerText = totalValue.toFixed(2);
+        }
+
+        function viewInvestment(button) {
+            const row = button.parentElement.parentElement;
+            const assetName = row.cells[0].innerText;
+            const investedAmount = row.cells[1].innerText;
+            const currentValue = row.cells[2].innerText;
+            const percentChange = row.cells[3].innerText;
+
+            const details = `Asset Name: ${assetName}\nInvested Amount: ${investedAmount}\nCurrent Value: ${currentValue}\n% Change: ${percentChange}`;
+            document.getElementById('investmentDetails').innerText = details;
+
+            const modal = document.getElementById('investmentModal');
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('investmentModal');
+            modal.style.display = 'none';
+        }
+
+        let currentRow;
+
+        function showUpdateModal(button) {
+            currentRow = button.parentElement.parentElement;
+            const assetName = currentRow.cells[0].innerText;
+            const investedAmount = currentRow.cells[1].innerText.replace('$', '');
+            const currentValue = currentRow.cells[2].innerText.replace('$', '');
+
+            document.getElementById('updateAssetName').value = assetName;
+            document.getElementById('updateInvestedAmount').value = investedAmount;
+            document.getElementById('updateCurrentValue').value = currentValue;
+
+            const updateModal = document.getElementById('updateModal');
+            updateModal.style.display = 'flex';
+        }
+
+        function closeUpdateModal() {
+            const updateModal = document.getElementById('updateModal');
+            updateModal.style.display = 'none';
+        }
+
+        function updateInvestment() {
+            const assetName = document.getElementById('updateAssetName').value;
+            const investedAmount = parseFloat(document.getElementById('updateInvestedAmount').value);
+            const currentValue = parseFloat(document.getElementById('updateCurrentValue').value);
+
+            if (assetName && investedAmount && currentValue) {
+                const percentChange = ((currentValue - investedAmount) / investedAmount * 100).toFixed(2);
+
+                currentRow.cells[0].innerText = assetName;
+                currentRow.cells[1].innerText = `$${investedAmount.toFixed(2)}`;
+                currentRow.cells[2].innerText = `$${currentValue.toFixed(2)}`;
+                currentRow.cells[3].innerText = `${percentChange}%`;
+
+                const investments = JSON.parse(localStorage.getItem('investments')) || [];
+                const index = investments.findIndex(investment => investment.assetName === assetName);
+                if (index !== -1) {
+                    investments[index] = { assetName, investedAmount, currentValue };
+                }
+                saveInvestments(investments);
+
+                const chartIndex = investmentChart.data.labels.indexOf(assetName);
+                if (chartIndex !== -1) {
+                    investmentChart.data.datasets[0].data[chartIndex] = investedAmount;
+                } else {
+                    investmentChart.data.labels.push(assetName);
+                    investmentChart.data.datasets[0].data.push(investedAmount);
+                }
+                investmentChart.update();
+
+                updateTotalValue();
+                closeUpdateModal();
+            }
+        }
+
+        function deleteInvestment(button) {
+            const row = button.parentElement.parentElement;
+            const assetName = row.cells[0].innerText;
+
+            const investments = JSON.parse(localStorage.getItem('investments')) || [];
+            const index = investments.findIndex(investment => investment.assetName === assetName);
+            if (index !== -1) {
+                investments.splice(index, 1);
+                saveInvestments(investments);
+            }
+
+            const chartIndex = investmentChart.data.labels.indexOf(assetName);
+            if (chartIndex !== -1) {
+                investmentChart.data.labels.splice(chartIndex, 1);
+                investmentChart.data.datasets[0].data.splice(chartIndex, 1);
+                investmentChart.update();
+            }
+
+            row.remove();
+            updateTotalValue();
+        }
+
+        window.onload = loadInvestments;
+    </script>
+</body>
+</html>
